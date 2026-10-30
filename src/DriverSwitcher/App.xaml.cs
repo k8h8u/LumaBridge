@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ public partial class App : System.Windows.Application
     private ToolStripMenuItem _statusItem = null!;
     private ToolStripMenuItem _ezcadItem = null!;
     private ToolStripMenuItem _lightBurnItem = null!;
+    private BrandPopup? _popup;
 
     private Icon _iconEzCad = null!;
     private Icon _iconLightBurn = null!;
@@ -22,6 +24,9 @@ public partial class App : System.Windows.Application
     private Icon _iconUnknown = null!;
 
     private bool _busy;
+    private DriverMode _mode = DriverMode.NoBoard;
+    private int _boardCount;
+    private string? _lastError;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -34,24 +39,34 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        _iconEzCad = CreateIcon(Color.FromArgb(46, 160, 67));
-        _iconLightBurn = CreateIcon(Color.FromArgb(9, 105, 218));
-        _iconNone = CreateIcon(Color.FromArgb(110, 118, 129));
-        _iconUnknown = CreateIcon(Color.FromArgb(210, 130, 20));
+        _iconEzCad = Brand.CreateIcon(Brand.Orange);
+        _iconLightBurn = Brand.CreateIcon(Brand.Graphite);
+        _iconNone = Brand.CreateIcon(null);
+        _iconUnknown = Brand.CreateIcon(Brand.LightGray);
 
         _statusItem = new ToolStripMenuItem("Определение статуса...") { Enabled = false };
         _ezcadItem = new ToolStripMenuItem("Режим EzCAD2", null, (_, _) => RunSwitch(DriverMode.EzCad2));
         _lightBurnItem = new ToolStripMenuItem("Режим LightBurn", null, (_, _) => RunSwitch(DriverMode.LightBurn));
         var refreshItem = new ToolStripMenuItem("Обновить статус", null, (_, _) => RefreshStatus());
+        var siteItem = new ToolStripMenuItem("luminograph.ru", null, (_, _) => OpenSite())
+        {
+            Tag = "accent",
+            Font = Brand.CreateFont(9f),
+        };
         var exitItem = new ToolStripMenuItem("Выход", null, (_, _) => ExitApp());
 
-        var menu = new ContextMenuStrip();
+        var menu = new ContextMenuStrip
+        {
+            Renderer = new BrandMenuRenderer(),
+            Font = Brand.CreateFont(9f),
+        };
         menu.Items.Add(_statusItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_ezcadItem);
         menu.Items.Add(_lightBurnItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(refreshItem);
+        menu.Items.Add(siteItem);
         menu.Items.Add(exitItem);
         menu.Opening += (_, _) =>
         {
@@ -66,6 +81,7 @@ public partial class App : System.Windows.Application
             Visible = true,
             ContextMenuStrip = menu,
         };
+        _tray.MouseClick += Tray_MouseClick;
 
         RefreshStatus();
     }
@@ -75,8 +91,36 @@ public partial class App : System.Windows.Application
         if (_tray != null)
             _tray.Visible = false;
         _tray?.Dispose();
+        _popup?.Close();
         _mutex?.ReleaseMutex();
         base.OnExit(e);
+    }
+
+    private void Tray_MouseClick(object? sender, MouseEventArgs e)
+    {
+        if (e.Button != MouseButtons.Left)
+            return;
+
+        if (_popup == null)
+        {
+            _popup = new BrandPopup();
+            _popup.SwitchRequested += mode =>
+            {
+                _popup.Hide();
+                RunSwitch(mode);
+            };
+        }
+
+        if (_popup.IsVisible)
+        {
+            _popup.Hide();
+            return;
+        }
+
+        if (!_busy)
+            RefreshStatus();
+        _popup.UpdateState(_mode, _boardCount, _lastError, _busy);
+        _popup.ShowAtTray();
     }
 
     private void RunSwitch(DriverMode target)
@@ -88,6 +132,7 @@ public partial class App : System.Windows.Application
 
         string name = target == DriverMode.EzCad2 ? "EzCAD2" : "LightBurn";
         SetTrayIcon(_iconUnknown, $"Переключение на {name}...");
+        _popup?.UpdateState(_mode, _boardCount, _lastError, busy: true);
 
         Task.Run(() =>
         {
@@ -126,22 +171,22 @@ public partial class App : System.Windows.Application
 
     private void RefreshStatus()
     {
-        DriverMode mode;
-        string suffix = string.Empty;
+        _lastError = null;
         try
         {
             var boards = DriverManager.FindBoards();
-            mode = DriverManager.GetMode(boards);
-            if (boards.Count > 1)
-                suffix = $" ({boards.Count} шт.)";
+            _boardCount = boards.Count;
+            _mode = DriverManager.GetMode(boards);
         }
         catch (Exception ex)
         {
-            mode = DriverMode.Unknown;
-            _statusItem.Text = "Ошибка: " + ex.Message;
+            _boardCount = 0;
+            _mode = DriverMode.Unknown;
+            _lastError = ex.Message;
         }
 
-        switch (mode)
+        string suffix = _boardCount > 1 ? $" ({_boardCount} шт.)" : string.Empty;
+        switch (_mode)
         {
             case DriverMode.NoBoard:
                 _statusItem.Text = "Плата не найдена";
@@ -156,20 +201,20 @@ public partial class App : System.Windows.Application
                 SetTrayIcon(_iconLightBurn, "DriverSwitcher: режим LightBurn");
                 break;
             default:
-                if (_statusItem.Text.StartsWith("Ошибка", StringComparison.Ordinal))
-                    SetTrayIcon(_iconUnknown, "DriverSwitcher: ошибка");
-                else
-                {
-                    _statusItem.Text = "Режим не определён" + suffix;
-                    SetTrayIcon(_iconUnknown, "DriverSwitcher: режим не определён");
-                }
+                _statusItem.Text = _lastError != null
+                    ? "Ошибка: " + _lastError
+                    : "Режим не определён" + suffix;
+                SetTrayIcon(_iconUnknown, "DriverSwitcher: режим не определён");
                 break;
         }
 
-        _ezcadItem.Checked = mode == DriverMode.EzCad2;
-        _lightBurnItem.Checked = mode == DriverMode.LightBurn;
-        _ezcadItem.Enabled = !_busy && mode != DriverMode.EzCad2;
-        _lightBurnItem.Enabled = !_busy && mode != DriverMode.LightBurn;
+        _ezcadItem.Checked = _mode == DriverMode.EzCad2;
+        _lightBurnItem.Checked = _mode == DriverMode.LightBurn;
+        _ezcadItem.Enabled = !_busy && _mode != DriverMode.EzCad2;
+        _lightBurnItem.Enabled = !_busy && _mode != DriverMode.LightBurn;
+
+        if (_popup != null && _popup.IsVisible)
+            _popup.UpdateState(_mode, _boardCount, _lastError, _busy);
     }
 
     private void SetMenuEnabled(bool enabled)
@@ -186,25 +231,15 @@ public partial class App : System.Windows.Application
         _tray.Text = text.Length > 63 ? text.Substring(0, 63) : text;
     }
 
+    private static void OpenSite()
+    {
+        Process.Start(new ProcessStartInfo { FileName = Brand.SiteUrl, UseShellExecute = true });
+    }
+
     private void ExitApp()
     {
         if (_tray != null)
             _tray.Visible = false;
         Shutdown();
-    }
-
-    private static Icon CreateIcon(Color color)
-    {
-        using var bmp = new Bitmap(32, 32);
-        using (var g = Graphics.FromImage(bmp))
-        {
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.Clear(Color.Transparent);
-            using var brush = new SolidBrush(color);
-            g.FillEllipse(brush, 2, 2, 28, 28);
-            using var pen = new Pen(Color.White, 2f);
-            g.DrawEllipse(pen, 3, 3, 26, 26);
-        }
-        return Icon.FromHandle(bmp.GetHicon());
     }
 }
