@@ -1,0 +1,38 @@
+; BJJCZ board WinUSB driver package (for LightBurn)
+; Covers USB\VID_9588 PID 9980 / 9899 / 9990 / 9999
+[Version]
+Signature   = "$Windows NT$"
+Class       = USBDevice
+ClassGuid   = {88BAE032-5A81-49f0-BC3D-A4FF138216D6}
+Provider    = %ProviderName%
+CatalogFile = BJJCZ_WinUSB.cat
+DriverVer   = 10/30/2026,1.0.0.0
+PnpLockdown = 1
+
+[Manufacturer]
+%ProviderName% = BJJCZ_Devices,NTamd64
+
+[BJJCZ_Devices.NTamd64]
+%DeviceDesc% = USB_Install, USB\VID_9588&PID_9980
+%DeviceDesc% = USB_Install, USB\VID_9588&PID_9899
+%DeviceDesc% = USB_Install, USB\VID_9588&PID_9990
+%DeviceDesc% = USB_Install, USB\VID_9588&PID_9999
+
+[USB_Install]
+Include = winusb.inf
+Needs   = WINUSB.NT
+
+[USB_Install.Services]
+Include = winusb.inf
+Needs   = WINUSB.NT.Services
+
+[USB_Install.HW]
+AddReg  = WinUSB_AddReg
+
+[WinUSB_AddReg]
+; GUID_DEVINTERFACE_USB_DEVICE - lets libusb/WinUSB clients enumerate the board
+HKR,,DeviceInterfaceGUIDs,0x10000,"{A5DCBF10-6530-11D2-901F-00C04FB951ED}"
+
+[Strings]
+ProviderName = "DriverSwitcher"
+DeviceDesc   = "BJJCZ Laser Board (WinUSB)"
