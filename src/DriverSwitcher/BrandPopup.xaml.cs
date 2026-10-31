@@ -19,10 +19,12 @@ public partial class BrandPopup : Window
     private bool _busy;
 
     public event Action<DriverMode>? SwitchRequested;
+    public event Action? ConvertRequested;
 
     public BrandPopup()
     {
         InitializeComponent();
+        ApplyButtonStyle(ConvertButton, active: false);
     }
 
     public void UpdateState(DriverMode mode, int boardCount, string? error, bool busy)
@@ -66,6 +68,7 @@ public partial class BrandPopup : Window
 
         ApplyButtonStyle(EzCadButton, active: mode == DriverMode.EzCad2);
         ApplyButtonStyle(LightBurnButton, active: mode == DriverMode.LightBurn);
+        ConvertButton.IsEnabled = !busy;
     }
 
     public void ShowAtTray()
@@ -106,6 +109,11 @@ public partial class BrandPopup : Window
         if (_mode == DriverMode.LightBurn)
             return;
         SwitchRequested?.Invoke(DriverMode.LightBurn);
+    }
+
+    private void ConvertButton_Click(object sender, RoutedEventArgs e)
+    {
+        ConvertRequested?.Invoke();
     }
 
     private void SiteLink_Click(object sender, MouseButtonEventArgs e)

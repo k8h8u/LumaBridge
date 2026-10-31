@@ -76,6 +76,10 @@
                         Click="LightBurnButton_Click"/>
             </Grid>
 
+            <Button x:Name="ConvertButton" Content="Макет .ezd → LightBurn"
+                    Style="{StaticResource BrandButton}" Margin="0,0,0,14"
+                    Click="ConvertButton_Click"/>
+
             <TextBlock x:Name="SiteLink" Text="luminograph.ru" Foreground="#E75823"
                        FontSize="11" HorizontalAlignment="Center" Cursor="Hand"
                        MouseLeftButtonUp="SiteLink_Click"/>

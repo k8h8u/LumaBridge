@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
@@ -32,6 +33,15 @@ public partial class App : System.Windows.Application
     {
         base.OnStartup(e);
 
+        // CLI-режим для тестов и автоматизации:
+        // DriverSwitcher.exe --convert input.ezd output.lbrn2 [report.txt]
+        if (e.Args.Length >= 3 && e.Args[0] == "--convert")
+        {
+            int code = RunCliConvert(e.Args[1], e.Args[2], e.Args.Length > 3 ? e.Args[3] : null);
+            Shutdown(code);
+            return;
+        }
+
         _mutex = new Mutex(true, @"Global\DriverSwitcher.SingleInstance", out bool createdNew);
         if (!createdNew)
         {
@@ -47,6 +57,7 @@ public partial class App : System.Windows.Application
         _statusItem = new ToolStripMenuItem("Определение статуса...") { Enabled = false };
         _ezcadItem = new ToolStripMenuItem("Режим EzCAD2", null, (_, _) => RunSwitch(DriverMode.EzCad2));
         _lightBurnItem = new ToolStripMenuItem("Режим LightBurn", null, (_, _) => RunSwitch(DriverMode.LightBurn));
+        var convertItem = new ToolStripMenuItem("Макет .ezd → LightBurn…", null, (_, _) => ConvertEzdFile());
         var refreshItem = new ToolStripMenuItem("Обновить статус", null, (_, _) => RefreshStatus());
         var siteItem = new ToolStripMenuItem("luminograph.ru", null, (_, _) => OpenSite())
         {
@@ -65,6 +76,7 @@ public partial class App : System.Windows.Application
         menu.Items.Add(_ezcadItem);
         menu.Items.Add(_lightBurnItem);
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(convertItem);
         menu.Items.Add(refreshItem);
         menu.Items.Add(siteItem);
         menu.Items.Add(exitItem);
@@ -109,6 +121,11 @@ public partial class App : System.Windows.Application
                 _popup.Hide();
                 RunSwitch(mode);
             };
+            _popup.ConvertRequested += () =>
+            {
+                _popup.Hide();
+                ConvertEzdFile();
+            };
         }
 
         if (_popup.IsVisible)
@@ -121,6 +138,105 @@ public partial class App : System.Windows.Application
             RefreshStatus();
         _popup.UpdateState(_mode, _boardCount, _lastError, _busy);
         _popup.ShowAtTray();
+    }
+
+    private static int RunCliConvert(string source, string target, string? reportPath)
+    {
+        try
+        {
+            var r = Convert.EzdToLbrn2.Convert(source, target);
+            string report =
+                $"OK shapes={r.Shapes} contours={r.Contours} layers={r.Layers} " +
+                $"skippedText={r.SkippedText} skippedImages={r.SkippedImages} " +
+                $"skippedHidden={r.SkippedHidden} penOverflow={r.PenOverflow}";
+            if (reportPath != null)
+                System.IO.File.WriteAllText(reportPath, report);
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            if (reportPath != null)
+                System.IO.File.WriteAllText(reportPath, "ERROR " + ex.Message);
+            return 1;
+        }
+    }
+
+    private void ConvertEzdFile()
+    {
+        if (_busy)
+            return;
+
+        var dlg = new OpenFileDialog
+        {
+            Filter = "Проект EzCAD2 (*.ezd)|*.ezd",
+            Title = "Выберите файл .ezd для конвертации",
+        };
+        if (dlg.ShowDialog() != DialogResult.OK)
+            return;
+
+        string source = dlg.FileName;
+        string target = System.IO.Path.ChangeExtension(source, ".lbrn2");
+
+        _busy = true;
+        SetMenuEnabled(false);
+        SetTrayIcon(_iconUnknown, "Конвертация макета...");
+        _popup?.UpdateState(_mode, _boardCount, _lastError, busy: true);
+
+        Task.Run(() =>
+        {
+            string message;
+            ToolTipIcon icon = ToolTipIcon.Info;
+            string? driverNote = null;
+            try
+            {
+                var r = Convert.EzdToLbrn2.Convert(source, target);
+                message = $"{System.IO.Path.GetFileName(target)}\nОбъектов: {r.Shapes}, слоёв: {r.Layers}.";
+                var notes = new List<string>();
+                if (r.SkippedText > 0)
+                    notes.Add($"текст пропущен: {r.SkippedText}");
+                if (r.SkippedImages > 0)
+                    notes.Add($"картинки пропущены: {r.SkippedImages}");
+                if (r.PenOverflow)
+                    notes.Add("пенов больше 30 — лишние слиты в один слой");
+                if (notes.Count > 0)
+                    message += "\n" + string.Join(", ", notes) + ".";
+
+                try
+                {
+                    var boards = DriverManager.FindBoards();
+                    if (DriverManager.GetMode(boards) == DriverMode.EzCad2)
+                    {
+                        DriverManager.SwitchToLightBurn();
+                        driverNote = "Драйвер переключён на LightBurn.";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    driverNote = "Драйвер не переключён: " + ex.Message;
+                }
+
+                try
+                {
+                    Process.Start(new ProcessStartInfo { FileName = target, UseShellExecute = true });
+                }
+                catch
+                {
+                    // LightBurn не ассоциирован с .lbrn2 — файл просто лежит рядом с исходником
+                }
+            }
+            catch (Exception ex)
+            {
+                message = "Ошибка конвертации: " + ex.Message;
+                icon = ToolTipIcon.Error;
+            }
+
+            Dispatcher.Invoke(() =>
+            {
+                FinishSwitch();
+                string note = driverNote != null ? "\n" + driverNote : string.Empty;
+                _tray!.ShowBalloonTip(8000, "DriverSwitcher — конвертация", message + note, icon);
+            });
+        });
     }
 
     private void RunSwitch(DriverMode target)
