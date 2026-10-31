@@ -17,6 +17,11 @@ public static class EzdToLbrn2
     public static double FieldWidth { get; set; } = 110.0;
     public static double FieldHeight { get; set; } = 110.0;
 
+    /// <summary>Центрировать макет по полю (по ограничивающей рамке), иначе — строго по центру EzCAD.</summary>
+    public static bool AutoCenter { get; set; } = true;
+
+    private static double _offX, _offY;
+
     public sealed class ConvertResult
     {
         public int Shapes;
@@ -72,6 +77,28 @@ public static class EzdToLbrn2
 
         foreach (var obj in ezd.Objects)
             Flatten(obj, shapes, result, penOverride: null, hatch: null);
+
+        // Центр ограничивающей рамки (для автоцентрирования)
+        _offX = 0;
+        _offY = 0;
+        if (AutoCenter && shapes.Count > 0)
+        {
+            double minX = double.MaxValue, minY = double.MaxValue;
+            double maxX = double.MinValue, maxY = double.MinValue;
+            foreach (var shape in shapes)
+            foreach (var c in shape.Contours)
+            {
+                minX = Math.Min(minX, c.StartX); maxX = Math.Max(maxX, c.StartX);
+                minY = Math.Min(minY, c.StartY); maxY = Math.Max(maxY, c.StartY);
+                foreach (var seg in c.Segs)
+                {
+                    minX = Math.Min(minX, seg.X); maxX = Math.Max(maxX, seg.X);
+                    minY = Math.Min(minY, seg.Y); maxY = Math.Max(maxY, seg.Y);
+                }
+            }
+            _offX = (minX + maxX) / 2.0;
+            _offY = (minY + maxY) / 2.0;
+        }
 
         // Пены → слои LightBurn (макс. 30)
         var usedPens = shapes.Select(s => s.Pen).Distinct().OrderBy(p => p).ToList();
@@ -325,7 +352,7 @@ public static class EzdToLbrn2
         (Math.Abs(v) < 1e-12 ? 0 : v).ToString("0.######", CultureInfo.InvariantCulture);
 
     private static (double x, double y) ToLb(double x, double y) =>
-        (x + FieldWidth / 2.0, FieldHeight / 2.0 - y);
+        (x + FieldWidth / 2.0 - _offX, FieldHeight / 2.0 + _offY - y);
 
     private static string BuildXml(EzdFile ezd, List<LbShape> shapes, Dictionary<int, int> penToLayer)
     {
@@ -491,7 +518,7 @@ public static class EzdToLbrn2
             }
         }
 
-        sb.AppendLine("    <Notes ShowOnLoad=\"0\" Notes=\"Converted from EzCAD2 by DriverSwitcher\"/>");
+        sb.AppendLine("    <Notes ShowOnLoad=\"0\" Notes=\"Converted from EzCAD2 by LumaBridge\"/>");
         sb.AppendLine("</LightBurnProject>");
         return sb.ToString();
     }

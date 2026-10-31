@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace DriverSwitcher;
@@ -18,7 +19,7 @@ internal static class Brand
 
     public const string SiteUrl = "https://luminograph.ru";
 
-    /// <summary>Трей-иконка: монограмма LUMINOGRAPH + точка режима (null — без точки).</summary>
+    /// <summary>Трей-иконка: официальная монограмма LUMINOGRAPH + точка режима (null — без точки).</summary>
     public static System.Drawing.Icon CreateIcon(Color? modeDot)
     {
         const int s = 64;
@@ -28,31 +29,43 @@ internal static class Brand
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Color.Transparent);
 
-            using (var pen = new Pen(Turquoise, 6f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
-                g.DrawArc(pen, 8, 8, 48, 48, 195f, 150f);
+            using var bg = new SolidBrush(LightBg);
+            using var rounded = RoundedRect(new Rectangle(1, 1, s - 3, s - 3), 13);
+            g.FillPath(bg, rounded);
 
-            using (var pen = new Pen(Silver, 6f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
-                g.DrawArc(pen, 8, 8, 48, 48, 15f, 150f);
-
-            using (var pen = new Pen(Orange, 7f)
-            {
-                StartCap = LineCap.Round,
-                EndCap = LineCap.Round,
-                LineJoin = LineJoin.Round,
-            })
-            {
-                g.DrawLines(pen, new[] { new Point(21, 44), new Point(32, 20), new Point(43, 44) });
-            }
+            using var logo = LoadLogo();
+            float h = 50f;
+            float w = h * logo.Width / (float)logo.Height;
+            g.DrawImage(logo, (s - w) / 2f, (s - h) / 2f, w, h);
 
             if (modeDot.HasValue)
             {
                 using var white = new SolidBrush(Color.White);
-                g.FillEllipse(white, 38, 38, 22, 22);
+                g.FillEllipse(white, s - 21, s - 21, 19, 19);
                 using var dot = new SolidBrush(modeDot.Value);
-                g.FillEllipse(dot, 41, 41, 16, 16);
+                g.FillEllipse(dot, s - 18, s - 18, 13, 13);
             }
         }
         return System.Drawing.Icon.FromHandle(bmp.GetHicon());
+    }
+
+    private static Bitmap LoadLogo()
+    {
+        var uri = new System.Uri("pack://application:,,,/Assets/LuminoLogo.png");
+        using var stream = System.Windows.Application.GetResourceStream(uri).Stream;
+        return new Bitmap(stream);
+    }
+
+    private static GraphicsPath RoundedRect(Rectangle bounds, int radius)
+    {
+        var path = new GraphicsPath();
+        int d = radius * 2;
+        path.AddArc(bounds.X, bounds.Y, d, d, 180, 90);
+        path.AddArc(bounds.Right - d, bounds.Y, d, d, 270, 90);
+        path.AddArc(bounds.Right - d, bounds.Bottom - d, d, d, 0, 90);
+        path.AddArc(bounds.X, bounds.Bottom - d, d, d, 90, 90);
+        path.CloseFigure();
+        return path;
     }
 
     public static Font CreateFont(float size)

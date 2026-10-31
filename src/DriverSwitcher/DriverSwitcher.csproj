@@ -6,13 +6,13 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <AssemblyName>DriverSwitcher</AssemblyName>
+    <AssemblyName>LumaBridge</AssemblyName>
     <RootNamespace>DriverSwitcher</RootNamespace>
     <Nullable>enable</Nullable>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <Version>0.1.0</Version>
-    <Product>DriverSwitcher</Product>
-    <Description>Переключение драйверов плат BJJCZ между EzCAD2 и LightBurn</Description>
+    <Version>0.2.0</Version>
+    <Product>LUMABRIDGE</Product>
+    <Description>Переключение драйверов BJJCZ EzCAD2/LightBurn и перенос макетов</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +27,7 @@
     <EmbeddedResource Include="Assets\DriverSwitcher.cer">
       <LogicalName>DriverSwitcher.Assets.DriverSwitcher.cer</LogicalName>
     </EmbeddedResource>
+    <Resource Include="Assets\LuminoLogo.png"/>
   </ItemGroup>
 
 </Project>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -37,7 +38,7 @@ public partial class App : System.Windows.Application
         // DriverSwitcher.exe --convert input.ezd output.lbrn2 [report.txt]
         if (e.Args.Length >= 3 && e.Args[0] == "--convert")
         {
-            int code = RunCliConvert(e.Args[1], e.Args[2], e.Args.Length > 3 ? e.Args[3] : null);
+            int code = RunCliConvert(e.Args);
             Shutdown(code);
             return;
         }
@@ -89,7 +90,7 @@ public partial class App : System.Windows.Application
         _tray = new NotifyIcon
         {
             Icon = _iconNone,
-            Text = "DriverSwitcher",
+            Text = "LumaBridge",
             Visible = true,
             ContextMenuStrip = menu,
         };
@@ -140,10 +141,33 @@ public partial class App : System.Windows.Application
         _popup.ShowAtTray();
     }
 
-    private static int RunCliConvert(string source, string target, string? reportPath)
+    private static int RunCliConvert(string[] args)
     {
+        string source = args[1];
+        string target = args[2];
+        string? reportPath = args.Length > 3 && !args[3].StartsWith("field=") ? args[3] : null;
+
         try
         {
+            foreach (var a in args.Skip(3))
+            {
+                if (a.StartsWith("field="))
+                {
+                    var parts = a.Substring(6).Replace("x", "×").Split('×')
+                        .Select(s => double.TryParse(s.Trim(), System.Globalization.NumberStyles.Float,
+                            System.Globalization.CultureInfo.InvariantCulture, out double v) ? v : 0)
+                        .ToList();
+                    if (parts.Count > 0 && parts[0] > 0)
+                    {
+                        Convert.EzdToLbrn2.FieldWidth = parts[0];
+                        Convert.EzdToLbrn2.FieldHeight = parts.Count > 1 && parts[1] > 0 ? parts[1] : parts[0];
+                    }
+                }
+                else if (a == "autocenter=0")
+                {
+                    Convert.EzdToLbrn2.AutoCenter = false;
+                }
+            }
             var r = Convert.EzdToLbrn2.Convert(source, target);
             string report =
                 $"OK shapes={r.Shapes} contours={r.Contours} layers={r.Layers} " +
@@ -174,6 +198,19 @@ public partial class App : System.Windows.Application
         if (dlg.ShowDialog() != DialogResult.OK)
             return;
 
+        var settings = AppSettings.Load();
+        var optionsDlg = new ConvertOptionsDialog(settings)
+        {
+            Owner = _popup?.IsVisible == true ? _popup : null,
+        };
+        if (optionsDlg.ShowDialog() != true)
+            return;
+
+        settings.FieldWidth = optionsDlg.FieldWidth;
+        settings.FieldHeight = optionsDlg.FieldHeight;
+        settings.AutoCenter = optionsDlg.AutoCenter;
+        settings.Save();
+
         string source = dlg.FileName;
         string target = System.IO.Path.ChangeExtension(source, ".lbrn2");
 
@@ -189,6 +226,9 @@ public partial class App : System.Windows.Application
             string? driverNote = null;
             try
             {
+                Convert.EzdToLbrn2.FieldWidth = settings.FieldWidth;
+                Convert.EzdToLbrn2.FieldHeight = settings.FieldHeight;
+                Convert.EzdToLbrn2.AutoCenter = settings.AutoCenter;
                 var r = Convert.EzdToLbrn2.Convert(source, target);
                 message = $"{System.IO.Path.GetFileName(target)}\nОбъектов: {r.Shapes}, слоёв: {r.Layers}.";
                 var notes = new List<string>();
@@ -234,7 +274,7 @@ public partial class App : System.Windows.Application
             {
                 FinishSwitch();
                 string note = driverNote != null ? "\n" + driverNote : string.Empty;
-                _tray!.ShowBalloonTip(8000, "DriverSwitcher — конвертация", message + note, icon);
+                _tray!.ShowBalloonTip(8000, "LumaBridge — конвертация", message + note, icon);
             });
         });
     }
@@ -262,7 +302,7 @@ public partial class App : System.Windows.Application
                 Dispatcher.Invoke(() =>
                 {
                     FinishSwitch();
-                    _tray!.ShowBalloonTip(3000, "DriverSwitcher",
+                    _tray!.ShowBalloonTip(3000, "LumaBridge",
                         $"Готово: режим {name}.", ToolTipIcon.Info);
                 });
             }
@@ -271,7 +311,7 @@ public partial class App : System.Windows.Application
                 Dispatcher.Invoke(() =>
                 {
                     FinishSwitch();
-                    _tray!.ShowBalloonTip(6000, "DriverSwitcher — ошибка",
+                    _tray!.ShowBalloonTip(6000, "LumaBridge — ошибка",
                         ex.Message, ToolTipIcon.Error);
                 });
             }

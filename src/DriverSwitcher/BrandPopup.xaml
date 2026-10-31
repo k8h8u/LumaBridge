@@ -39,17 +39,10 @@
             BorderBrush="#E9EAEB" BorderThickness="1" Width="300">
         <StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                <Canvas Width="36" Height="36" Margin="0,0,12,0" VerticalAlignment="Center">
-                    <Polyline Points="11,27 18,8 25,27" Stroke="#E75823" StrokeThickness="4"
-                              StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                    <Path Stroke="#01BAD7" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                          Data="M 5,14 A 14,14 0 0 1 31,14"/>
-                    <Path Stroke="#C0C0C0" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                          Data="M 5,24 A 14,14 0 0 0 31,24"/>
-                </Canvas>
+                <Image Source="Assets/LuminoLogo.png" Height="44" Margin="0,0,12,0" VerticalAlignment="Center"/>
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="LUMINOGRAPH" FontWeight="Bold" FontSize="16" Foreground="#202124"/>
-                    <TextBlock Text="DRIVER SWITCHER" FontSize="9" Foreground="#9EA0A2"/>
+                    <TextBlock Text="LUMABRIDGE" FontSize="10" Foreground="#E75823" FontWeight="SemiBold"/>
                 </StackPanel>
             </StackPanel>
 
