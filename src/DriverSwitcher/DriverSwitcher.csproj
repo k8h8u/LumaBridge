@@ -10,7 +10,8 @@
     <RootNamespace>DriverSwitcher</RootNamespace>
     <Nullable>enable</Nullable>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <Product>LUMABRIDGE</Product>
     <Description>Переключение драйверов BJJCZ EzCAD2/LightBurn и перенос макетов</Description>
   </PropertyGroup>

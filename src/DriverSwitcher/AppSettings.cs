@@ -10,6 +10,7 @@ public sealed class AppSettings
     public double FieldWidth { get; set; } = 110;
     public double FieldHeight { get; set; } = 110;
     public bool AutoCenter { get; set; } = true;
+    public string LastEzdDir { get; set; } = string.Empty;
 
     private static string FilePath =>
         Path.Combine(

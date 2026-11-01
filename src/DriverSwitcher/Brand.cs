@@ -14,8 +14,6 @@ internal static class Brand
     public static readonly Color GrayText = Color.FromArgb(0x88, 0x8B, 0x8D);
     public static readonly Color LightGray = Color.FromArgb(0x9E, 0xA0, 0xA2);
     public static readonly Color Divider = Color.FromArgb(0xE9, 0xEA, 0xEB);
-    public static readonly Color Turquoise = Color.FromArgb(0x01, 0xBA, 0xD7);
-    public static readonly Color Silver = Color.FromArgb(0xC0, 0xC0, 0xC0);
 
     public const string SiteUrl = "https://luminograph.ru";
 

@@ -190,15 +190,20 @@ public partial class App : System.Windows.Application
         if (_busy)
             return;
 
+        var settings = AppSettings.Load();
         var dlg = new OpenFileDialog
         {
             Filter = "Проект EzCAD2 (*.ezd)|*.ezd",
             Title = "Выберите файл .ezd для конвертации",
+            InitialDirectory = !string.IsNullOrEmpty(settings.LastEzdDir) && System.IO.Directory.Exists(settings.LastEzdDir)
+                ? settings.LastEzdDir
+                : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
         };
         if (dlg.ShowDialog() != DialogResult.OK)
             return;
 
-        var settings = AppSettings.Load();
+        settings.LastEzdDir = System.IO.Path.GetDirectoryName(dlg.FileName) ?? string.Empty;
+
         var optionsDlg = new ConvertOptionsDialog(settings)
         {
             Owner = _popup?.IsVisible == true ? _popup : null,
