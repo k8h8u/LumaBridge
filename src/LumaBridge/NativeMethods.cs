@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace DriverSwitcher;
+namespace LumaBridge;
 
 internal static class NativeMethods
 {

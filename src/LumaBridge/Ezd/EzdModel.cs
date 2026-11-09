@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace DriverSwitcher.Ezd;
+namespace LumaBridge.Ezd;
 
 /// <summary>Параметры пера EzCAD2 (мощность, скорость, частота и т.д.).</summary>
 public sealed class EzdPen

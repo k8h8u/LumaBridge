@@ -3,7 +3,7 @@ using System.Drawing.Drawing2D;
 using System.Reflection;
 using System.Windows.Forms;
 
-namespace DriverSwitcher;
+namespace LumaBridge;
 
 internal static class Brand
 {

@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace DriverSwitcher;
+namespace LumaBridge;
 
 public partial class BrandPopup : Window
 {

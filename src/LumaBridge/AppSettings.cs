@@ -2,9 +2,9 @@ using System;
 using System.IO;
 using System.Text.Json;
 
-namespace DriverSwitcher;
+namespace LumaBridge;
 
-/// <summary>Настройки приложения (хранятся в ProgramData\DriverSwitcher\settings.json).</summary>
+/// <summary>Настройки приложения (хранятся в ProgramData\LumaBridge\settings.json).</summary>
 public sealed class AppSettings
 {
     public double FieldWidth { get; set; } = 110;
@@ -15,7 +15,7 @@ public sealed class AppSettings
     private static string FilePath =>
         Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-            "DriverSwitcher", "settings.json");
+            "LumaBridge", "settings.json");
 
     public static AppSettings Load()
     {

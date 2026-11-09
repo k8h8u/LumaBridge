@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 
-namespace DriverSwitcher;
+namespace LumaBridge;
 
 public partial class ConvertOptionsDialog : Window
 {

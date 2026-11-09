@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 
-namespace DriverSwitcher;
+namespace LumaBridge;
 
 public partial class App : System.Windows.Application
 {
@@ -35,7 +35,7 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
 
         // CLI-режим для тестов и автоматизации:
-        // DriverSwitcher.exe --convert input.ezd output.lbrn2 [report.txt]
+        // LumaBridge.exe --convert input.ezd output.lbrn2 [report.txt]
         if (e.Args.Length >= 3 && e.Args[0] == "--convert")
         {
             int code = RunCliConvert(e.Args);
@@ -43,7 +43,7 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        _mutex = new Mutex(true, @"Global\DriverSwitcher.SingleInstance", out bool createdNew);
+        _mutex = new Mutex(true, @"Global\LumaBridge.SingleInstance", out bool createdNew);
         if (!createdNew)
         {
             Shutdown();
@@ -351,21 +351,21 @@ public partial class App : System.Windows.Application
         {
             case DriverMode.NoBoard:
                 _statusItem.Text = "Плата не найдена";
-                SetTrayIcon(_iconNone, "DriverSwitcher: плата не найдена");
+                SetTrayIcon(_iconNone, "LumaBridge: плата не найдена");
                 break;
             case DriverMode.EzCad2:
                 _statusItem.Text = "Текущий режим: EzCAD2" + suffix;
-                SetTrayIcon(_iconEzCad, "DriverSwitcher: режим EzCAD2");
+                SetTrayIcon(_iconEzCad, "LumaBridge: режим EzCAD2");
                 break;
             case DriverMode.LightBurn:
                 _statusItem.Text = "Текущий режим: LightBurn" + suffix;
-                SetTrayIcon(_iconLightBurn, "DriverSwitcher: режим LightBurn");
+                SetTrayIcon(_iconLightBurn, "LumaBridge: режим LightBurn");
                 break;
             default:
                 _statusItem.Text = _lastError != null
                     ? "Ошибка: " + _lastError
                     : "Режим не определён" + suffix;
-                SetTrayIcon(_iconUnknown, "DriverSwitcher: режим не определён");
+                SetTrayIcon(_iconUnknown, "LumaBridge: режим не определён");
                 break;
         }
 

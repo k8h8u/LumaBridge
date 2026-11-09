@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
-namespace DriverSwitcher;
+namespace LumaBridge;
 
 public enum DriverMode
 {
@@ -35,8 +35,8 @@ public static class DriverManager
         @"USB\VID_9588&PID_9999",
     };
 
-    private const string ResourcePrefix = "DriverSwitcher.Drivers.";
-    private const string CertResource = "DriverSwitcher.Assets.DriverSwitcher.cer";
+    private const string ResourcePrefix = "LumaBridge.Drivers.";
+    private const string CertResource = "LumaBridge.Assets.LumaBridge.cer";
 
     public static List<BoardInfo> FindBoards()
     {
@@ -190,7 +190,7 @@ public static class DriverManager
     {
         string root = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-            "DriverSwitcher", "drivers", set);
+            "LumaBridge", "drivers", set);
         Directory.CreateDirectory(root);
 
         var asm = Assembly.GetExecutingAssembly();

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace DriverSwitcher.Ezd;
+namespace LumaBridge.Ezd;
 
 /// <summary>
 /// Чтение бинарного формата .ezd (EzCAD2).

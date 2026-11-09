@@ -1,4 +1,4 @@
-# DriverSwitcher
+# LumaBridge
 
 Трей-утилита для быстрого переключения драйверов лазерных плат **BJJCZ**
 (`USB\VID_9588`, PID `9980 / 9899 / 9990 / 9999`) между двумя режимами:
@@ -12,7 +12,7 @@ Zadig больше не нужен: переключение делается ш
 
 ## Использование
 
-1. Запустить `DriverSwitcher.exe` (запросит права администратора).
+1. Запустить `LumaBridge.exe` (запросит права администратора).
 2. В трее появится монограмма LUMINOGRAPH с точкой режима:
    - оранжевая точка — режим EzCAD2;
    - графитовая точка — режим LightBurn;
@@ -43,7 +43,7 @@ EzCAD2 — рядом появляется проект LightBurn с геоме�
 CLI-режим для автоматизации:
 
 ```
-DriverSwitcher.exe --convert input.ezd output.lbrn2 [report.txt]
+LumaBridge.exe --convert input.ezd output.lbrn2 [report.txt]
 ```
 
 Всё необходимое (драйвер EzCAD2, подписанный пакет WinUSB, сертификат)
@@ -55,7 +55,7 @@ DriverSwitcher.exe --convert input.ezd output.lbrn2 [report.txt]
   сервиса устройства (`Lmcv2u`/`LMCUSB` → EzCAD2, `WinUSB` → LightBurn).
 - Пакет WinUSB (`drivers/winusb/BJJCZ_WinUSB.inf` + подписанный каталог)
   использует in-box драйвер Microsoft WinUSB (`Include=winusb.inf`).
-- Каталог WinUSB подписан самоподписанным сертификатом `DriverSwitcher`;
+- Каталог WinUSB подписан самоподписанным сертификатом LumaBridge (выпущен с именем `DriverSwitcher`);
   при первом переключении в режим LightBurn сертификат добавляется в
   LocalMachine\Root и LocalMachine\TrustedPublisher (модель Zadig/libwdi),
   поэтому установка проходит без предупреждений.
@@ -65,7 +65,7 @@ DriverSwitcher.exe --convert input.ezd output.lbrn2 [report.txt]
 Требуется .NET 8 SDK:
 
 ```powershell
-dotnet publish src\DriverSwitcher -c Release -r win-x64 --self-contained `
+dotnet publish src\LumaBridge -c Release -r win-x64 --self-contained `
     -p:PublishSingleFile=true -o publish
 ```
 

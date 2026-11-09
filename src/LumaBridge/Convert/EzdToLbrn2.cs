@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using DriverSwitcher.Ezd;
+using LumaBridge.Ezd;
 
-namespace DriverSwitcher.Convert;
+namespace LumaBridge.Convert;
 
 /// <summary>
 /// Конвертер .ezd (EzCAD2) → .lbrn2 (LightBurn).

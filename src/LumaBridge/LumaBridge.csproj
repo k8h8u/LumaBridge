@@ -7,10 +7,10 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>LumaBridge</AssemblyName>
-    <RootNamespace>DriverSwitcher</RootNamespace>
+    <RootNamespace>LumaBridge</RootNamespace>
     <Nullable>enable</Nullable>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <Version>0.2.1</Version>
+    <Version>1.0.0</Version>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <Product>LUMABRIDGE</Product>
     <Description>Переключение драйверов BJJCZ EzCAD2/LightBurn и перенос макетов</Description>
@@ -19,14 +19,14 @@
   <ItemGroup>
     <EmbeddedResource Include="..\..\drivers\ezcad2\*">
       <Link>Drivers\ezcad2\%(Filename)%(Extension)</Link>
-      <LogicalName>DriverSwitcher.Drivers.ezcad2.%(Filename)%(Extension)</LogicalName>
+      <LogicalName>LumaBridge.Drivers.ezcad2.%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="..\..\drivers\winusb\*">
       <Link>Drivers\winusb\%(Filename)%(Extension)</Link>
-      <LogicalName>DriverSwitcher.Drivers.winusb.%(Filename)%(Extension)</LogicalName>
+      <LogicalName>LumaBridge.Drivers.winusb.%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Assets\DriverSwitcher.cer">
-      <LogicalName>DriverSwitcher.Assets.DriverSwitcher.cer</LogicalName>
+    <EmbeddedResource Include="Assets\LumaBridge.cer">
+      <LogicalName>LumaBridge.Assets.LumaBridge.cer</LogicalName>
     </EmbeddedResource>
     <Resource Include="Assets\LuminoLogo.png"/>
   </ItemGroup>
